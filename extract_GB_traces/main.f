@@ -1837,6 +1837,7 @@ C*****************************************
   
         !write IPF map with nodes and lines to a postscript file
         if (out(1).eq.1) then
+        write(*,*) 'test HEINI 1'
         open (59, file='map_'//fname(1:point)//'.ps',status='unknown') ! open the postscript file
         write (59,1)'%!PS' ! this is the first line of every postscript file
         n_up(1)=0.0 ! reference direction for the IPF map
@@ -1844,10 +1845,18 @@ C*****************************************
         n_up(3)=1.0
         do i1=1,NROWS
          do i2=1,NCOLS_EVEN
+!         write(*,*) i1, i2
           ind=int(map(i1,i2,1))
           e1(1)=grain(2,ind)
           e1(2)=grain(3,ind)
           e1(3)=grain(4,ind)
+          ! >>> ADD DETAILED PRINT HERE <<<
+         if (i1.eq.714 .and. i2 .gt. 35 .and. i2 .lt. 45) then ! Focus on area around crash
+             write(*,*) 'DEBUG PIXEL: i1=', i1, 'i2=', i2, 'ind=', ind,
+     +               'e1=', e1(1), e1(2), e1(3)
+             call flush(6)
+         endif
+         ! >>> END DETAILED PRINT <<<
           if(e1(1).eq.0.0.and.e1(2).eq.0.0) then
            goto 3000
           endif
@@ -1871,7 +1880,19 @@ C*****************************************
            n_or(2)=n_or(3)
            n_or(3)=tem
           endif
+          if (i1.eq.714 .and. i2.eq.44) then
+              write(*,*) 'DEBUG: Before atan2: n_or(1)=', n_or(1), 'n_or(2)=', n_or(2)
+              call flush(6)
+          endif
+
           eta = (180.0/pi)*atan2(n_or(2),n_or(1)) !projected angle from [101]
+          ! >>> ADD PRINT FOR n_or(3) <<<
+          if (i1.eq.714 .and. i2 .gt. 35 .and. i2 .lt. 45) then
+              write(*,*) 'DEBUG PIXEL: About to call acos2. n_or(3)=', n_or(3),
+     +                   ' for ind=', ind
+          call flush(6)
+          endif
+          ! >>> END PRINT <<<
           alpha=(180.0/pi)*acos2(n_or(3)) !angle from [001]
           redr=alpha/54.73561 !ratio of angle from max value
           if (redr.gt.1.0) then
@@ -1891,24 +1912,81 @@ C*****************************************
           if (blue.gt.max_color) then
            max_color=blue
           endif
+          ! ... after max_color is determined ...
+          if (i1.eq.714 .and. i2.eq.44) then
+              write(*,*) 'DEBUG: Before color division: max_color=', max_color,
+     +                       ' red=',red,' green=',green,' blue=',blue
+              call flush(6)
+          endif
+          if (max_color .le. 1.0e-6) then 
+            red   = 0.8 
+            green = 0.8
+            blue  = 0.8
+          else
+            red=red/max_color
+            green=green/max_color
+            blue=blue/max_color
+          endif
           red=red/max_color
           green=green/max_color
           blue=blue/max_color
+          if (i1.eq.714 .and. i2.eq.44) then
+              write(*,*) 'DEBUG FINAL VALS: red=',red,'green=',green,'blue=',blue
+              write(*,*) 'DEBUG FINAL VALS: map_x=',map(i1,i2,2), 'map_y=',map(i1,i2,3)
+              write(*,*) 'DEBUG FINAL VALS: XSc=',XSc, 'YSc=',YSc, 'XOff=',XOff, 'YOff=',YOff
+              call flush(6)
+          endif
+
+          if (i1.eq.714 .and. i2.eq.44) then
+            write(*,*) 'DEBUG: Before PS write 1'; call flush(6)
+          endif
+          write (59,1)'1 setlinecap'
+          if (i1.eq.714 .and. i2.eq.44) then
+            write(*,*) 'DEBUG: Before PS write 2'; call flush(6)
+          endif
+          write (59,1)'1 setlinewidth'
+          if (i1.eq.714 .and. i2.eq.44) then
+            write(*,*) 'DEBUG: Before PS write 3'; call flush(6)
+          endif
+          write (59,18)red,green,blue,' setrgbcolor'
+          if (i1.eq.714 .and. i2.eq.44) then
+            write(*,*) 'DEBUG: Before PS write 4'; call flush(6)
+          endif
+          write(59,17)'newpath ',XOff+(XSc*map(i1,i2,2)),
+     +                   YOff+(YSc*map(i1,i2,3)),
+     +                   ' moveto 0.5 0.5 rlineto stroke'
+          if (i1.eq.714 .and. i2.eq.44) then 
+            write(*,*) 'DEBUG: After PS write 4'
+            call flush(6)
+          endif
+
           write (59,1)'1 setlinecap'
           write (59,1)'1 setlinewidth'
           write (59,18)red,green,blue,' setrgbcolor'
           write(59,17)'newpath ',XOff+(XSc*map(i1,i2,2)),YOff+(YSc*map(i1,i2,3)),' moveto 0 0 rlineto stroke'
  3000     continue
          enddo ! closes the i2=1,NCOLS_EVEN loop
-        enddo ! closes the i1=1,NROWS loop
+         if (i1.eq.714) then
+            write(*,*) 'DEBUG: COMPLETED i2 loop for i1=', i1
+            call flush(6)
+         endif
+      enddo ! closes the i1=1,NROWS loop
+      write(*,*) 'DEBUG: COMPLETED i1 loop (all pixels processed for PS map)'
+      call flush(6) 
+      !enddo ! closes the i1=1,NROWS loop
+
         !Draw all the segments on the map
+        write(*,*) 'test HEINI 2'
         write (59,1)'1.0 setlinewidth '
+
         do i1=1,segments
          write(59,15)XOff+(XSc*segment(i1,7)),YOff+(YSc*segment(i1,8)),' newpath moveto'
          write(59,15)XOff+(XSc*segment(i1,9)),YOff+(YSc*segment(i1,10)),' lineto'
          write(59,1)'0 setgray'
          write(59,1)'stroke'
         enddo
+
+        write(*,*) 'HEINI 3'
 
         !draw all the gb nodes on the map
         write (59,1)'0.1 setlinewidth '
