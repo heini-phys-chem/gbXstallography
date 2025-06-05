@@ -1,0 +1,4 @@
+*.o
+*.ang
+*.txt
+gb_trace

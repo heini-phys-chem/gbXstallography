@@ -308,7 +308,8 @@ C*****************************************
           enddo !ends the i3=1,grains loop
  500      continue
           if (match.eq.0) then !if we get here and match=0, it is a new grain
-           if (grains.ge.9999) then ! conditional to catch errors
+          ! HEINI increase grain size
+           if (grains.ge.13999) then ! conditional to catch errors
             write(6,1)'there are too many grains (limit is 10000): redimension grain matrix, edit this check,  and recompile'
             goto 9000
            endif
