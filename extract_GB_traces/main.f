@@ -500,7 +500,8 @@ C*****************************************
             else
              continue
             endif
-            if (gbs.ge.299999) then
+            if (gbs.ge.599999) then
+              ! HEINI increased gb
              write(6,1) 'Too many gb nodes: redimension gb matrix, edit this check, recompile'
              goto 9000
             endif
@@ -520,7 +521,8 @@ C*****************************************
             else
              continue
             endif
-            if (gbs.ge.299999) then
+              ! HEINI increased gb
+            if (gbs.ge.599999) then
              write(6,1) 'Too many gb nodes: redimension gb matrix, edit this check, recompile'
              goto 9000
             endif
@@ -664,7 +666,8 @@ C*****************************************
            else
             continue
            endif
-           if (gbs.ge.299999) then
+           ! HEINI increase gb
+           if (gbs.ge.599999) then
             write(6,1) 'Too many gb nodes: redimension gb matrix, edit this check, recompile'
             goto 9000
            endif
@@ -684,7 +687,8 @@ C*****************************************
            else
             continue
            endif
-           if (gbs.ge.299999) then
+           ! HEINI increase gb
+           if (gbs.ge.599999) then
             write(6,1) 'Too many gb nodes: redimension gb matrix, edit this check, recompile'
             goto 9000
            endif
