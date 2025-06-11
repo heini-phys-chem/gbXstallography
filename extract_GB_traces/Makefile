@@ -16,7 +16,8 @@ MISC = Makefile README common.fi input.dat
 #  MORESOURCE = 
 
 LIBS=
-FLAGS= -O3 -c -ffixed-line-length-none
+#FLAGS= -O3 -c -ffixed-line-length-none
+FLAGS= -g -Wall -fcheck=bounds -O0 -c -ffixed-line-length-none
 #FLAGS= -g -c -O3 -w -s -static -fomit-frame-pointer -Wall -mpentiumpro \
 #                -march=pentiumpro -malign-functions=4 -funroll-loops \
 #                -fexpensive-optimizations -malign-double  \

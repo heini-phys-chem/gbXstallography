@@ -188,7 +188,7 @@ C*****************************************
         !write(6,3)'There are',header,' lines in the header'
         !The next 44 lines simply initilize a bunch of the matrices used to store information
         !initialize the grain matrix
-        do i1=1,10000
+        do i1=1,14000
          do i2=1,6
           grain(i2,i1)=0.0
          enddo
@@ -202,31 +202,31 @@ C*****************************************
          enddo
         enddo
         !initialize the node matrix
-        do i1=1,30000
+        do i1=1,50000
          do i2=1,6
           node(i1,i2)=0.0
          enddo
         enddo
         !initialize the grain boundary matrix
-        do i1=1,300000
+        do i1=1,600000
          do i2=1,4
           gb(i1,i2)=0.0
          enddo
         enddo
         !initialize the grain boundary matrix
-        do i1=1,10000
-         do i2=1,300
+        do i1=1,50000
+         do i2=1,1000
           GBDat(i1,i2)=0.0
          enddo
         enddo
         !initialize the grain boundary trace matrix
-        do i1=1,200
+        do i1=1,100000
          do i2=1,2
           trace(i1,i2)=0.0
          enddo
         enddo
         !initialize the segment matrix
-        do i1=1,10000
+        do i1=1,100000
          do i2=1,10
           segment(i1,i2)=0.0
          enddo
@@ -308,7 +308,6 @@ C*****************************************
           enddo !ends the i3=1,grains loop
  500      continue
           if (match.eq.0) then !if we get here and match=0, it is a new grain
-          ! HEINI increase grain size
            if (grains.ge.13999) then ! conditional to catch errors
             write(6,1)'there are too many grains (limit is 10000): redimension grain matrix, edit this check,  and recompile'
             goto 9000
@@ -501,7 +500,6 @@ C*****************************************
              continue
             endif
             if (gbs.ge.599999) then
-              ! HEINI increased gb
              write(6,1) 'Too many gb nodes: redimension gb matrix, edit this check, recompile'
              goto 9000
             endif
@@ -521,7 +519,6 @@ C*****************************************
             else
              continue
             endif
-              ! HEINI increased gb
             if (gbs.ge.599999) then
              write(6,1) 'Too many gb nodes: redimension gb matrix, edit this check, recompile'
              goto 9000
@@ -666,7 +663,6 @@ C*****************************************
            else
             continue
            endif
-           ! HEINI increase gb
            if (gbs.ge.599999) then
             write(6,1) 'Too many gb nodes: redimension gb matrix, edit this check, recompile'
             goto 9000
@@ -687,7 +683,6 @@ C*****************************************
            else
             continue
            endif
-           ! HEINI increase gb
            if (gbs.ge.599999) then
             write(6,1) 'Too many gb nodes: redimension gb matrix, edit this check, recompile'
             goto 9000
@@ -734,8 +729,11 @@ C*****************************************
          else
           GBDat(1,1)=gb(i1,3)
           GBDat(1,2)=gb(i1,4)
+          ! HEINI bugfix
           GBDat(1,3)=1
-          GBDat(1,15)=1
+          !GBDat(1,3)=i1
+          !GBDat(1,15)=1
+          GBDat(1,15)=i1
           boundaries=1
           goto 730
          endif
@@ -755,6 +753,14 @@ C*****************************************
            match=match+1
            !put this node in table row where it matched
            GBDat(i2,3)=GBDat(i2,3)+1
+          ! HEINI BUgfix>>>>>>>>> ADD THIS DEBUG CHECK <<<<<<<<<<
+          if (i1 .le. 0) then
+             write(6,*) 'FATAL ERROR: Storing invalid gb index in GBDat!'
+             write(6,*) 'Boundary:', i2, ' Node Count:', GBDat(i2,3)
+             write(6,*) 'Invalid index i1 =', i1
+             stop
+          endif
+          ! >>>>>>>>>>>>> END OF CHECK <<<<<<<<<<<<<
            GBDat(i2,14+int(GBDat(i2,3)))=i1
           else
            continue !keep looking
@@ -1578,8 +1584,15 @@ C*****************************************
          FromOrigin=FromOrigin+1
          !Now we know the gb node closest to the start/last point
          trace(ind,2)=0.0 ! mark as used
-         LastPointX=gb(int(trace(ind,1)),1)
-         LastPointY=gb(int(trace(ind,1)),2)
+         ! HEINI bugfixing
+         write(*,*) 'HEINI', ind, int(trace(ind,1))
+         if (int(trace(ind,1)) .eq. 0) then
+           LastPointX=gb(1,1)
+           LastPointY=gb(1,2)
+         else
+           LastPointX=gb(int(trace(ind,1)),1)
+           LastPointY=gb(int(trace(ind,1)),2)
+         endif
          c_seg(segs,1)=LastPointX
          c_seg(segs,2)=LastPointY
          !Now we check if last point is near the origin point
@@ -1837,7 +1850,6 @@ C*****************************************
   
         !write IPF map with nodes and lines to a postscript file
         if (out(1).eq.1) then
-        write(*,*) 'test HEINI 1'
         open (59, file='map_'//fname(1:point)//'.ps',status='unknown') ! open the postscript file
         write (59,1)'%!PS' ! this is the first line of every postscript file
         n_up(1)=0.0 ! reference direction for the IPF map
@@ -1845,18 +1857,10 @@ C*****************************************
         n_up(3)=1.0
         do i1=1,NROWS
          do i2=1,NCOLS_EVEN
-!         write(*,*) i1, i2
           ind=int(map(i1,i2,1))
           e1(1)=grain(2,ind)
           e1(2)=grain(3,ind)
           e1(3)=grain(4,ind)
-          ! >>> ADD DETAILED PRINT HERE <<<
-         if (i1.eq.714 .and. i2 .gt. 35 .and. i2 .lt. 45) then ! Focus on area around crash
-             write(*,*) 'DEBUG PIXEL: i1=', i1, 'i2=', i2, 'ind=', ind,
-     +               'e1=', e1(1), e1(2), e1(3)
-             call flush(6)
-         endif
-         ! >>> END DETAILED PRINT <<<
           if(e1(1).eq.0.0.and.e1(2).eq.0.0) then
            goto 3000
           endif
@@ -1880,19 +1884,7 @@ C*****************************************
            n_or(2)=n_or(3)
            n_or(3)=tem
           endif
-          if (i1.eq.714 .and. i2.eq.44) then
-              write(*,*) 'DEBUG: Before atan2: n_or(1)=', n_or(1), 'n_or(2)=', n_or(2)
-              call flush(6)
-          endif
-
           eta = (180.0/pi)*atan2(n_or(2),n_or(1)) !projected angle from [101]
-          ! >>> ADD PRINT FOR n_or(3) <<<
-          if (i1.eq.714 .and. i2 .gt. 35 .and. i2 .lt. 45) then
-              write(*,*) 'DEBUG PIXEL: About to call acos2. n_or(3)=', n_or(3),
-     +                   ' for ind=', ind
-          call flush(6)
-          endif
-          ! >>> END PRINT <<<
           alpha=(180.0/pi)*acos2(n_or(3)) !angle from [001]
           redr=alpha/54.73561 !ratio of angle from max value
           if (redr.gt.1.0) then
@@ -1912,81 +1904,24 @@ C*****************************************
           if (blue.gt.max_color) then
            max_color=blue
           endif
-          ! ... after max_color is determined ...
-          if (i1.eq.714 .and. i2.eq.44) then
-              write(*,*) 'DEBUG: Before color division: max_color=', max_color,
-     +                       ' red=',red,' green=',green,' blue=',blue
-              call flush(6)
-          endif
-          if (max_color .le. 1.0e-6) then 
-            red   = 0.8 
-            green = 0.8
-            blue  = 0.8
-          else
-            red=red/max_color
-            green=green/max_color
-            blue=blue/max_color
-          endif
           red=red/max_color
           green=green/max_color
           blue=blue/max_color
-          if (i1.eq.714 .and. i2.eq.44) then
-              write(*,*) 'DEBUG FINAL VALS: red=',red,'green=',green,'blue=',blue
-              write(*,*) 'DEBUG FINAL VALS: map_x=',map(i1,i2,2), 'map_y=',map(i1,i2,3)
-              write(*,*) 'DEBUG FINAL VALS: XSc=',XSc, 'YSc=',YSc, 'XOff=',XOff, 'YOff=',YOff
-              call flush(6)
-          endif
-
-          if (i1.eq.714 .and. i2.eq.44) then
-            write(*,*) 'DEBUG: Before PS write 1'; call flush(6)
-          endif
-          write (59,1)'1 setlinecap'
-          if (i1.eq.714 .and. i2.eq.44) then
-            write(*,*) 'DEBUG: Before PS write 2'; call flush(6)
-          endif
-          write (59,1)'1 setlinewidth'
-          if (i1.eq.714 .and. i2.eq.44) then
-            write(*,*) 'DEBUG: Before PS write 3'; call flush(6)
-          endif
-          write (59,18)red,green,blue,' setrgbcolor'
-          if (i1.eq.714 .and. i2.eq.44) then
-            write(*,*) 'DEBUG: Before PS write 4'; call flush(6)
-          endif
-          write(59,17)'newpath ',XOff+(XSc*map(i1,i2,2)),
-     +                   YOff+(YSc*map(i1,i2,3)),
-     +                   ' moveto 0.5 0.5 rlineto stroke'
-          if (i1.eq.714 .and. i2.eq.44) then 
-            write(*,*) 'DEBUG: After PS write 4'
-            call flush(6)
-          endif
-
           write (59,1)'1 setlinecap'
           write (59,1)'1 setlinewidth'
           write (59,18)red,green,blue,' setrgbcolor'
           write(59,17)'newpath ',XOff+(XSc*map(i1,i2,2)),YOff+(YSc*map(i1,i2,3)),' moveto 0 0 rlineto stroke'
  3000     continue
          enddo ! closes the i2=1,NCOLS_EVEN loop
-         if (i1.eq.714) then
-            write(*,*) 'DEBUG: COMPLETED i2 loop for i1=', i1
-            call flush(6)
-         endif
-      enddo ! closes the i1=1,NROWS loop
-      write(*,*) 'DEBUG: COMPLETED i1 loop (all pixels processed for PS map)'
-      call flush(6) 
-      !enddo ! closes the i1=1,NROWS loop
-
+        enddo ! closes the i1=1,NROWS loop
         !Draw all the segments on the map
-        write(*,*) 'test HEINI 2'
         write (59,1)'1.0 setlinewidth '
-
         do i1=1,segments
          write(59,15)XOff+(XSc*segment(i1,7)),YOff+(YSc*segment(i1,8)),' newpath moveto'
          write(59,15)XOff+(XSc*segment(i1,9)),YOff+(YSc*segment(i1,10)),' lineto'
          write(59,1)'0 setgray'
          write(59,1)'stroke'
         enddo
-
-        write(*,*) 'HEINI 3'
 
         !draw all the gb nodes on the map
         write (59,1)'0.1 setlinewidth '
