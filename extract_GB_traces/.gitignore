@@ -4,3 +4,9 @@
 gb_trace
 map_CTFtest1_000.ps
 tmp
+__pycache__
+crystallography.py
+map_CTFtest1_000.ps.save
+map_CTFtest1_000_working.ps
+process_ebds.py
+segments_000_map.png

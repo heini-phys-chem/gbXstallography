@@ -215,7 +215,7 @@ C*****************************************
         enddo
         !initialize the grain boundary matrix
         do i1=1,50000
-         do i2=1,1000
+         do i2=1,10000
           GBDat(i1,i2)=0.0
          enddo
         enddo
@@ -234,6 +234,9 @@ C*****************************************
         c_seg=0.0
         dist=0.0
         NewNode=0.0
+
+        count_fail = 0
+        count_work = 0
 
        !------------------------------------------------------------------
        ! The next block of code finds grains, assigns the grain ID numbers,
@@ -732,8 +735,8 @@ C*****************************************
           ! HEINI bugfix
           GBDat(1,3)=1
           !GBDat(1,3)=i1
-          !GBDat(1,15)=1
-          GBDat(1,15)=i1
+          GBDat(1,15)=1
+          !GBDat(1,15)=i1
           boundaries=1
           goto 730
          endif
@@ -1589,7 +1592,10 @@ C*****************************************
          if (int(trace(ind,1)) .eq. 0) then
            LastPointX=gb(1,1)
            LastPointY=gb(1,2)
+           count_fail = count_fail + 1
+           write(*,*) 'HEINI_IFELSE COUNT'
          else
+           count_work = count_work + 1
            LastPointX=gb(int(trace(ind,1)),1)
            LastPointY=gb(int(trace(ind,1)),2)
          endif
@@ -2158,6 +2164,7 @@ C*****************************************
 
  9000  continue
 
+       write(*,*) 'Failed: ', count_fail, ' Worked: ', count_work
        write(6,1) 'Program complete'
 
        end

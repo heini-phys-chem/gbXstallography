@@ -38,6 +38,7 @@
        integer NodeMatch,unconnected,TraceLength,segs,tsgs,ct,osgs
        integer TJNum,SegMax,FromOrigin,segments,search,out(10)
        integer position(3), search_fail,NewNodes
+       integer count_fail, count_work
     
  ! these are used in main
        character*80 keyword
